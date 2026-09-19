@@ -1,119 +1,172 @@
-# 📈 Spanish Banks Stock Analysis & Prediction
+# Análisis cuantitativo de bancos españoles
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
-[![Pandas](https://img.shields.io/badge/Pandas-2.0-green.svg)](https://pandas.pydata.org/)
-[![yfinance](https://img.shields.io/badge/yfinance-Finance-orange.svg)](https://pypi.org/project/yfinance/)
-[![Matplotlib](https://img.shields.io/badge/Matplotlib-Viz-purple.svg)](https://matplotlib.org/)
+[![Tests](https://github.com/jorgegalanr/spanish-banks-stock-prediction/actions/workflows/tests.yml/badge.svg)](https://github.com/jorgegalanr/spanish-banks-stock-prediction/actions/workflows/tests.yml)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 
-**Análisis técnico completo + scoring (0-10) + recomendaciones de inversión** para bancos españoles del IBEX (BBVA, Santander, CaixaBank, Sabadell, Bankinter, Unicaja). Datos reales desde 2010 vía **Yahoo Finance**.
+Proyecto educativo para construir y evaluar señales técnicas sobre seis bancos españoles: BBVA, Santander, CaixaBank, Sabadell, Bankinter y Unicaja.
 
-## 🎯 Objetivos del Proyecto
+Aunque el nombre histórico del repositorio contiene *stock prediction*, el proyecto no intenta adivinar el precio exacto de la siguiente sesión. Su objetivo actual es más preciso: comprobar si un ranking cuantitativo sencillo mejora fuera de muestra una cartera equiponderada después de costes de transacción.
 
-- Recopilar datos históricos de **6 bancos españoles** (2010–presente)
-- Calcular **7 factores técnicos** (rentabilidad, VaR, RSI, momentum, volatilidad...)
-- Generar **scoring integral ponderado** (0-10) por banco
-- Proporcionar **recomendaciones accionables** (compra/venta/mantener)
-- Crear **portfolio óptimo** basado en scores y diversificación
-- **Formateo europeo** (punto miles, coma decimal) para reporting
+> No constituye asesoramiento financiero ni un sistema listo para operar con dinero real.
 
-## 📊 Datos y Cobertura
+## Pregunta de análisis
 
-**Bancos analizados:** BBVA.MC, SAN.MC, CABK.MC, SAB.MC, BKT.MC, UNI.MC
-- **Período:** 2010–2026 (~3,800 días de cotización)
-- **Frecuencia:** Diaria (Open, High, Low, Close, Volume)
-- **Fuente:** Yahoo Finance (`yfinance`)
+> ¿Una selección causal de bancos basada en momentum, tendencia, volatilidad y drawdown supera una cartera equiponderada en el tramo temporal reservado para evaluación?
 
-## 🔬 Metodología / Factores del Scoring
+La comparación con un baseline es imprescindible. Un score puede producir rankings convincentes y, aun así, generar peor rentabilidad ajustada al riesgo que una estrategia pasiva.
 
-| Factor | Peso | Métrica | Interpretación |
-|--------|------|---------|----------------|
-| **Rentabilidad** | **25%** | Anualizada | Retorno histórico |
-| **Riesgo (VaR)** | **20%** | Percentil 95% | Pérdida potencial |
-| **Momentum** | **15%** | RSI(14) + Mom(20) | Fuerza reciente |
-| **Tendencia** | **15%** | SMA20 vs SMA50 | Dirección técnica |
-| **Volatilidad** | **10%** | 30 días anualizada | Estabilidad |
-| **Drawdown** | **10%** | % desde máximo | Recuperación |
-| **Diversificación** | **5%** | Correlación | Reducción riesgo |
+## Activos
 
-## 📈 Resultados Típicos (Ejemplo 2025)
+| Entidad | Ticker de Yahoo Finance |
+|---|---|
+| BBVA | `BBVA.MC` |
+| Banco Santander | `SAN.MC` |
+| CaixaBank | `CABK.MC` |
+| Banco Sabadell | `SAB.MC` |
+| Bankinter | `BKT.MC` |
+| Unicaja Banco | `UNI.MC` |
 
-🏆 RANKING POR SCORE (0-10):
+## Metodología
 
-BBVA.MC → 8.7 ⭐ COMPRA FUERTE
+El score transversal combina cuatro factores calculados en cada fecha:
 
-SAN.MC → 7.9 ⭐ COMPRA
+| Factor | Peso | Definición |
+|---|---:|---|
+| Momentum | 35 % | Rentabilidad de las últimas 63 sesiones |
+| Tendencia | 30 % | Distancia del precio respecto a la SMA de 200 sesiones |
+| Baja volatilidad | 20 % | Volatilidad anualizada de 63 sesiones, invertida en el ranking |
+| Drawdown | 15 % | Distancia respecto al máximo móvil de 252 sesiones |
 
-BKT.MC → 7.2 MANTENER
+Cada factor se transforma en un percentil entre los bancos disponibles. Solo son elegibles los activos cuyo precio está por encima de su media de 200 sesiones y la estrategia reparte el capital entre los dos scores más altos.
 
-CABK.MC → 6.1 MANTENER
+### Controles temporales
 
-UNI.MC → 5.4 ⚠️ VENDER
+1. Los indicadores utilizan únicamente observaciones pasadas y presentes.
+2. La posición calculada al cierre de una sesión se retrasa un día antes de aplicarse.
+3. Las métricas se calculan exclusivamente sobre el 30 % final de las fechas.
+4. Se descuentan 10 puntos básicos por unidad de rotación.
+5. El benchmark invierte el mismo capital en cada activo al inicio del test y mantiene las participaciones sin rebalancear.
 
-SAB.MC → 4.2 ❌ VENTA FUERTE
+No se optimizan pesos ni umbrales sobre el test. Aun así, una única división temporal no basta para demostrar capacidad predictiva.
 
-text
+## Arquitectura
 
-**Portfolio sugerido (100€):**
-BBVA: 35€ | SAN: 30€ | BKT: 20€ | CABK: 15€
-VaR 95% portfolio: -2.8% (vs -4.1% individual)
+```mermaid
+flowchart TD
+    A[Precios ajustados] --> B[Factores causales]
+    B --> C[Ranking transversal]
+    C --> D[Posiciones retrasadas]
+    D --> E[Costes de transacción]
+    E --> F[Comparación con baseline]
+```
 
-text
+## Demostración reproducible
 
-## 🛠️ Tech Stack Completo
+El repositorio incluye `data/sample_prices.csv`, una serie **sintética y determinista**. Permite ejecutar y probar todo el pipeline sin conexión a Internet; no debe interpretarse como evidencia sobre el mercado real.
 
-Data: yfinance, pandas, numpy
-Technical Analysis: TA-Lib (RSI, SMA, momentum)
-Visualization: matplotlib, seaborn
-Scoring: Custom weighted algorithm
-Output: Formateo español (1.234,56 €)
+```powershell
+python run_analysis.py
+```
 
-text
+Resultados de la muestra versionada:
 
-## 🚀 Instalación y Uso
+| Cartera | Rentabilidad total | CAGR | Volatilidad anual | Sharpe (rf=0) | Máximo drawdown |
+|---|---:|---:|---:|---:|---:|
+| Estrategia técnica | 3,29 % | 2,76 % | 16,26 % | 0,25 | -16,51 % |
+| Equiponderada | 19,63 % | 16,25 % | 18,17 % | 0,92 | -15,50 % |
 
-```bash
-git clone https://github.com/jorgegalanr/spanish-banks-stock-prediction.git
-cd spanish-banks-stock-prediction
-pip install -r requirements.txt
-python main.py --period 5y  # 5 años de datos
-# o
-jupyter notebook analysis.ipynb
-Comandos rápidos:
+En esta muestra, la estrategia técnica **no supera** al baseline. Este resultado negativo es informativo: una narrativa técnica plausible no garantiza valor predictivo y debe contrastarse cuantitativamente.
 
-bash
-python scorer.py          # Scoring actual
-python portfolio.py       # Portfolio óptimo
-python quick_reco.py      # Recomendaciones día a día
-📁 Estructura del Proyecto
-text
-├── data/
-│   ├── historical/       # Datos cacheados
-│   └── current.csv       # Última actualización
+Los resultados se guardan en `reports/generated/`:
+
+- `backtest_metrics.csv`
+- `backtest_daily.csv`
+- `latest_scores.csv`
+- `equity_curve.png`
+
+## Ejecución con datos actuales
+
+La descarga mediante Yahoo Finance requiere conexión a Internet:
+
+```powershell
+python run_analysis.py --source yahoo --start 2017-01-01
+```
+
+Opciones principales:
+
+```powershell
+python run_analysis.py --help
+python run_analysis.py --top-n 3 --cost-bps 15 --test-size 0.25
+```
+
+Los resultados actuales pueden cambiar por revisiones del proveedor, fecha de consulta y disponibilidad de cada ticker. No se versionan como una recomendación vigente.
+
+## Instalación
+
+Desarrollado para Python 3.12:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Ejecutar el notebook:
+
+```powershell
+python -m jupyter notebook notebooks/02_backtest_reproducible.ipynb
+```
+
+## Pruebas
+
+```powershell
+python -m pip install -r requirements-test.txt
+python -m pytest -q
+```
+
+Las pruebas verifican, entre otros aspectos, que modificar precios futuros no altere posiciones históricas y que añadir costes nunca mejore artificialmente la rentabilidad.
+
+## Notebooks
+
+| Archivo | Propósito |
+|---|---|
+| `notebooks/01_exploracion_original.ipynb` | Trabajo inicial conservado para mostrar la evolución del proyecto; sus recomendaciones no están validadas mediante backtesting |
+| `notebooks/02_backtest_reproducible.ipynb` | Versión actual, modular y evaluada frente a baseline |
+
+## Estructura
+
+```text
+.
+├── data/sample_prices.csv
 ├── notebooks/
-│   └── full_analysis.ipynb
+│   ├── 01_exploracion_original.ipynb
+│   └── 02_backtest_reproducible.ipynb
+├── reports/generated/
 ├── src/
-│   ├── data_fetcher.py
-│   ├── technical_indicators.py
-│   ├── scoring_engine.py
-│   └── portfolio_optimizer.py
-├── figures/
-│   ├── ranking_heatmap.png
-│   └── portfolio_alloc.png
-├── main.py
-├── requirements.txt
-└── README.md
-🎯 Aplicaciones Reales
-text
-💼 Gestión de Cartera Personal
-🏦 Análisis rápido para brokers minoristas
-📊 Reporting interno de fondos
-🎓 Material didáctico Finanzas Cuantitativas
-⚠️ Disclaimer: Proyecto educativo. No constituye asesoramiento financiero.
+│   ├── backtest.py
+│   ├── data.py
+│   ├── reporting.py
+│   └── signals.py
+├── tests/
+├── run_analysis.py
+└── requirements*.txt
+```
 
-👤 Autor
-Jorge Galán Rodríguez
-💼 linkedin.com/in/jorgegalanrodriguez
-🐱 https://github.com/jorgegalanr
-jorgegalanrodriguez@gmail.com
+## Limitaciones
 
+- La muestra incluida es sintética y solo valida el funcionamiento del código.
+- La evaluación utiliza una única partición temporal; falta validación *walk-forward*.
+- Los pesos de los factores son hipótesis explícitas, no parámetros estimados de forma concluyente.
+- El modelo omite dividendos, impuestos, deslizamiento, horquillas y restricciones de liquidez.
+- El universo contiene empresas del mismo sector y ofrece poca diversificación estructural.
+- El Sharpe usa un tipo libre de riesgo igual a cero.
+- Un score alto expresa posición relativa dentro del universo, no probabilidad de subida.
 
+## Autor
+
+Jorge Galán Rodríguez — [GitHub](https://github.com/jorgegalanr) · [LinkedIn](https://linkedin.com/in/jorgegalanrodriguez)
+
+## Licencia
+
+MIT.
