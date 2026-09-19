@@ -1,8 +1,5 @@
 # Análisis cuantitativo de bancos españoles
 
-[![Tests](https://github.com/jorgegalanr/spanish-banks-stock-prediction/actions/workflows/tests.yml/badge.svg)](https://github.com/jorgegalanr/spanish-banks-stock-prediction/actions/workflows/tests.yml)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
-
 Proyecto educativo para construir y evaluar señales técnicas sobre seis bancos españoles: BBVA, Santander, CaixaBank, Sabadell, Bankinter y Unicaja.
 
 Aunque el nombre histórico del repositorio contiene *stock prediction*, el proyecto no intenta adivinar el precio exacto de la siguiente sesión. Su objetivo actual es más preciso: comprobar si un ranking cuantitativo sencillo mejora fuera de muestra una cartera equiponderada después de costes de transacción.
